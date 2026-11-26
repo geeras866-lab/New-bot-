@@ -9,31 +9,27 @@ import time
 import re
 import json
 import pytz
-import telethon
-from datetime import datetime, timedelta
+from datetime import datetime
 from telethon.errors import FloodWaitError
 from PIL import Image, ImageDraw, ImageFont
 
-# Direct API endpoint (replaces checker_bridge)
-
-# Premium Custom Emoji IDs (bot must be created with Telegram Premium account)
-# Use @RawDataBot to get custom_emoji_id for any premium emoji
+# Premium Custom Emoji IDs
 PREMIUM_EMOJI_IDS = {
-    "✅": "6298612102709909362",   # ✨ Multi Sparkles / Celebration
-    "❌": "6206110936789423908",   # 💀 White Skull (Dark Glow)
-    "⚡": "6026367225466720832",   # ⚡ Yellow Lightning Bolt
-    "💠": "5971837723676249096",   # 🌀 Neon Circle Rings
-    "⏸️": "6001440193058444284",   # ⚙️ Arc Reactor
-    "▶️": "6285315214673975495",   # ➡️ Neon Arrow Right
-    "🛑": "5420323339723881652",   # ⚠️ Red Warning Triangle
-    "📊": "5971837723676249096",   # 🌀
-    "📦": "6066395745139824604",   # 🎀 Neon Pink Bow
-    "📋": "5974235702701853774",   # Triple Ring
-    "🔄": "5971837723676249096",   # 🌀 Neon Circle Rings
-    "⏳": "5971837723676249096",   # 🌀
-    "🚀": "6282977077427702833",   # 🎉 Color Confetti
-    "⚠️": "5420323339723881652",   # ⚠️ Red Warning Triangle
-    "💎": "5462902520215002477",   # ✨
+    "✅": "6298612102709909362",
+    "❌": "6206110936789423908",
+    "⚡": "6026367225466720832",
+    "💠": "5971837723676249096",
+    "⏸️": "6001440193058444284",
+    "▶️": "6285315214673975495",
+    "🛑": "5420323339723881652",
+    "📊": "5971837723676249096",
+    "📦": "6066395745139824604",
+    "📋": "5974235702701853774",
+    "🔄": "5971837723676249096",
+    "⏳": "5971837723676249096",
+    "🚀": "6282977077427702833",
+    "⚠️": "5420323339723881652",
+    "💎": "5462902520215002477",
     "🔥": "5267500801240092311",
     "💰": "6190336264940559752",
     "💵": "6206155797722830770",
@@ -43,15 +39,11 @@ PREMIUM_EMOJI_IDS = {
     "🏧": "4967738760021148319",
     "☄️": "5041992177563993101",
     "🫥": "5325731315004218660",
-    "⏳": "5325583469344989152",
     "⚡️": "5042334757040423886",
     "👑": "5039727497143387500",
 }
 
 def premium_emoji(text):
-    """Replace Unicode emojis with <tg-emoji emoji-id="..."> for Premium custom emojis.
-    Requires a Telethon/parser that supports <tg-emoji emoji-id="ID"> in HTML (e.g. Telethon 2.x or custom parser).
-    Bot must be created with a Telegram Premium account for custom emojis to send."""
     if not text:
         return text
     placeholders = []
@@ -73,18 +65,11 @@ API_HASH = '1e7027eebd6f97d46b7ed6eac6d7137c'
 BOT_TOKEN = '9133225087:AAFpmv4jk3LUMfL5dWnGUAd9jv5eLq3L4uE'
 ADMIN_ID = 1293174588
 KEY_ADMINS = {1293174588}
-# ======================
-# GLOBAL VARIABLES
-# ============================================================
 
 # File paths
-PREMIUM_FILE = 'premium.txt'
 SITES_FILE = 'sites.txt'
 PROXY_FILE = 'proxy.txt'
-VERIFIED_FILE = "verified_users.txt"
 USER_SITES_FILE = 'user_sites.json'
-KEYS_FILE = "keys.txt"
-DAILY_USAGE_FILE = "daily_usage.json"
 RZ_SITES_FILE = 'rz_sites.txt'
 PHOTO_URL = "https://i.postimg.cc/NMfk3jpP/Leo4youh.png"
 
@@ -93,15 +78,12 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 bot = TelegramClient('checker_bot', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
-# RAZORPAY SINGLE SITE
 RAZORPAY_FIXED_SITE = "https://pages.razorpay.com/BusinessGarh?fbclid=PAAaYBPBDRDVaPZMu7kXaq1a2mNOIiXxEJ1usxIxxdbAJYt3q75QWhHXFZeh8_aem_AXQuIpg6pqBI2mXplIaDgYU0ztY4jF0C97qV1RPZF6WzfWeZy93K9u0Gv1wbTWYDpRs%20Ye%20lagan%20he%20to/pl_Eg24W0HLznkELl/view"
 RAZORPAY_API_BASE = "https://auto-razorpay-nano.vercel.app/hit"
 
 active_sessions = {}
 
-# === GROUP FIX HELPER ===
 async def send_to_chat(chat_id, text, **kwargs):
-    """Group aur Private dono mein sahi reply bhejta hai"""
     try:
         await bot.send_message(chat_id, text, **kwargs)
     except FloodWaitError as e:
@@ -136,12 +118,10 @@ _DEAD_INDICATORS = (
     'all products sold out', 'no_session_token', 'tokenize_fail',
 )
 
-# --- UPDATED LOADING FUNCTIONS ---
 def load_razorpay_sites():
     return [RAZORPAY_FIXED_SITE]
 
 def get_file_lines(filepath):
-    """Helper to read lines from a file fresh every time"""
     if not os.path.exists(filepath):
         return []
     try:
@@ -151,57 +131,8 @@ def get_file_lines(filepath):
         print(f"Error reading {filepath}: {e}")
         return []
 
-def load_premium_users():
-    return get_file_lines(PREMIUM_FILE)
-
-def load_verified_users():
-    return get_file_lines(VERIFIED_FILE)
-
-def is_verified(user_id):
-    return str(user_id) in load_verified_users()
-
-def get_daily_usage(user_id):
-    if not os.path.exists(DAILY_USAGE_FILE):
-        return {"cc_count": 0, "date": datetime.now().date().isoformat()}
-    try:
-        with open(DAILY_USAGE_FILE, "r") as f:
-            data = json.load(f)
-        today = datetime.now().date().isoformat()
-        if str(user_id) not in data or data[str(user_id)]["date"] != today:
-            data[str(user_id)] = {"cc_count": 0, "date": today}
-        return data[str(user_id)]
-    except:
-        return {"cc_count": 0, "date": datetime.now().date().isoformat()}
-
-def update_daily_usage(user_id, cc_count=1):
-    data = {}
-    if os.path.exists(DAILY_USAGE_FILE):
-        with open(DAILY_USAGE_FILE, "r") as f:
-            data = json.load(f)
-    today = datetime.now().date().isoformat()
-    if str(user_id) not in data or data[str(user_id)]["date"] != today:
-        data[str(user_id)] = {"cc_count": 0, "date": today}
-    data[str(user_id)]["cc_count"] += cc_count
-    with open(DAILY_USAGE_FILE, "w") as f:
-        json.dump(data, f)
-
-def check_limits(user_id, is_bulk=False):
-    """Admin aur Premium ko full unlimited"""
-    if is_admin(user_id) or is_premium(user_id):
-        return True, 999999
-    usage = get_daily_usage(user_id)
-    if is_bulk:
-        return usage["cc_count"] < 50000, 50000
-    return usage["cc_count"] < 150, 150 - usage["cc_count"]
-
 def is_admin(user_id):
     return user_id == ADMIN_ID or user_id in KEY_ADMINS
-
-def save_verified(user_id):
-    users = load_verified_users()
-    if str(user_id) not in users:
-        with open(VERIFIED_FILE, "a") as f:
-            f.write(f"{user_id}\n")
 
 def load_sites():
     return get_file_lines(SITES_FILE)
@@ -215,49 +146,13 @@ def create_result_card():
     alone_font = ImageFont.truetype("DejaVuSans.ttf", 70)
     draw.text(
         (80, 250),
-        "🍷 Powered By ℒℯℴ ♔︎",
+        "Unlimited Checker",
         font=alone_font,
         fill=(0, 200, 255)
     )
     img.save("result_card.png")
 
-def is_premium(user_id):
-    if not os.path.exists(PREMIUM_FILE):
-        return False
-
-    valid = []
-    user_id_str = str(user_id)
-    found = False
-
-    try:
-        with open(PREMIUM_FILE, "r", encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    uid, exp_str = line.split("|", 1)
-                    exp = datetime.strptime(exp_str.strip(), "%Y-%m-%d %H:%M:%S")
-                    if exp > datetime.now():
-                        valid.append(line)
-                        if uid == user_id_str:
-                            found = True
-                except:
-                    pass
-    except Exception as e:
-        print(f"Premium check error: {e}")
-        return False
-
-    try:
-        with open(PREMIUM_FILE, "w", encoding='utf-8') as f:
-            f.write("\n".join(valid) + ("\n" if valid else ""))
-    except:
-        pass
-
-    return found
-
 def extract_cc(text):
-    """Extract CC from text in format: card|month|year|cvv"""
     pattern = r'(\d{15,16})\|(\d{2})\|(\d{2,4})\|(\d{3,4})'
     matches = re.findall(pattern, text)
     cards = []
@@ -275,7 +170,6 @@ def is_dead_site_error(msg):
     return any(x in msg for x in _DEAD_INDICATORS)
 
 async def get_bin_info(card_number):
-    """Get BIN info from API"""
     try:
         bin_number = card_number[:6]
         timeout = aiohttp.ClientTimeout(total=20)
@@ -298,14 +192,10 @@ async def get_bin_info(card_number):
     except Exception:
         return '-', '-', '-', '-', '-', ''
 
-# ============================================================
-# GLOBAL VARIABLES — SIRF COUNT (PAUSE NAHI)
-# ============================================================
 API_FAIL_COUNT = 0
 API_FAIL_LOCK = asyncio.Lock()
 
 async def check_card(card, site, proxy):
-    """HAR ERROR = SITE ERROR → AUTO-DELETE + API ROTATION + SIRF RETRY (PAUSE NAHI)"""
     global API_FAIL_COUNT
 
     try:
@@ -520,7 +410,6 @@ async def check_card(card, site, proxy):
         }
 
 async def check_card_with_retry(card, sites, proxies, max_retries=20):
-    """Check a card with automatic retry — API ROTATION + SITE TRACKING (PAUSE NAHI)"""
     if not sites:
         return {'status': 'Dead', 'message': 'No sites available', 'card': card, 'gateway': '𝘼𝙪𝙩𝙤 𝙎𝙝𝙤𝙥𝙞𝙛𝙮', 'price': '-', 'site': None}
     if not proxies:
@@ -554,7 +443,6 @@ async def check_card_with_retry(card, sites, proxies, max_retries=20):
     return {'status': 'Dead', 'message': 'Max retries exceeded', 'card': card, 'gateway': '𝘼𝙪𝙩𝙤 𝙎𝙝𝙤𝙥𝙞𝙛𝙮', 'price': '-', 'site': None}
 
 async def update_progress(user_id, message_id, results, current_attempt_count, first_name="User", is_razorpay=False):
-    """𝙎𝙝𝙤𝙥𝙞𝙞 𝙓 𝙍𝙯𝙧 - Real IST Time instead of Elapsed"""
     ist = pytz.timezone('Asia/Kolkata')
     now = datetime.now(ist)
     current_time = now.strftime("%I:%M:%S %p IST")
@@ -580,8 +468,7 @@ async def update_progress(user_id, message_id, results, current_attempt_count, f
 <b>⚠️ 𝗘𝗥𝗥𝗢𝗥𝗦 ➜ {errors}</b>
 <b>⏳ 𝗧𝗜𝗠𝗘 ➜ {current_time}</b>  
 ━━━━━━━━━━━━━━━━━━━━
-<b>👑 𝗖𝗵𝗲𝗰𝗸𝗲𝗱 𝗕𝘆 ➜ <a href="tg://user?id={user_id}">{first_name}</a></b>
-<b>🦄 𝗕𝗼𝘁 𝗕𝘆 ➜ <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+<b>👑 𝗖𝗵𝗲𝗰𝗸𝗲𝗱 𝗕𝘆 ➜ <a href="tg://user?id={user_id}">{first_name}</a></b>"""
 
     buttons = [
         [
@@ -633,7 +520,6 @@ async def fast_site_check(sites):
     return alive, dead
 
 async def check_card_razorpay(card, proxy, amount=1):
-    """60X NUCLEAR Razorpay Checker - 60 Hard Retries + Smart Recovery"""
     try:
         parts = card.split('|')
         if len(parts) != 4:
@@ -751,7 +637,6 @@ async def add_user_site(user_id, site):
     return False
 
 async def test_proxy(proxy):
-    """Test a single proxy - SOCKS4/SOCKS5/HTTP/HTTPS"""
     test_card = "5154623245618097|03|2032|156"
     test_site = "https://riverbendhomedev.myshopify.com"
 
@@ -962,7 +847,6 @@ async def site_check_command(event):
 📌 <b>Your Sites:</b> <code>{user_count}</code>
 💡 <code>/addsites url</code> | <code>/mysites</code>"""), parse_mode="html")
 
-# ==================== BUTTON HANDLERS ====================
 @bot.on(events.CallbackQuery(data=b"use_my_sites"))
 async def use_my_sites_handler(event):
     user_id = event.sender_id
@@ -1437,11 +1321,6 @@ async def single_razorpay_cc(event):
     user_id = event.sender_id
     save_user(user_id)
 
-    allowed, remaining = check_limits(user_id, False)
-    if not allowed:
-        await event.reply(premium_emoji("❌ Daily limit khatam. Premium le lo."))
-        return
-
     if len(event.message.text.strip()) <= 5:
         await event.reply("Usage: `/rz 4097580790933573|06|2030|208`")
         return
@@ -1475,7 +1354,6 @@ async def single_razorpay_cc(event):
 
     try:
         result = await check_card_razorpay(card, random.choice(proxies))
-        update_daily_usage(user_id, 1)
 
         brand, bin_type, level, bank, country, flag = await get_bin_info(card.split('|')[0])
         price = result.get("price", "1")
@@ -1504,9 +1382,7 @@ async def single_razorpay_cc(event):
 <b>🏧 𝐁𝐚𝐧𝐤 ➜ {bank}</b>
 <b>☄️ 𝐂𝐨𝐮𝐧𝐭𝐫𝐲 ➜ {country} {flag}</b>
 <b>⏳ 𝐓𝐢𝐦𝐞 ➜ {current_time}</b>
-<b>👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{first_name}</a></b>
-
-🦄 <b>Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+<b>👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{first_name}</a></b>"""
 
         cc_copy = result['card']
         buttons = [[Button.url("📋 COPY CC", f"tg://copy?text={cc_copy}")]]
@@ -1519,7 +1395,6 @@ async def single_razorpay_cc(event):
         await send_to_chat(event.chat_id, premium_emoji(final_resp), buttons=buttons, parse_mode="html")
 
         if result['status'] in ['Charged', 'Approved']:
-            await send_realtime_hit_group(user_id, result, result['status'], first_name)
             await send_realtime_hit_dm(user_id, result, result['status'], first_name)
     except Exception as e:
         try:
@@ -1531,18 +1406,6 @@ async def single_razorpay_cc(event):
 async def razorpay_bulk_check(event):
     user_id = event.sender_id
     save_user(user_id)
-
-    if not is_admin(user_id):
-        await event.reply(premium_emoji(
-            "<b>🚧 𝙍𝘼𝙕𝙊𝙍𝙋𝘼𝙔 𝙈𝘼𝙎𝙎 𝙐𝙉𝘿𝙀𝙍 𝙈𝘼𝙄𝙉𝙏𝙀𝙉𝘼𝙉𝘾𝙀 🚧</b>\n\n"
-            "<b>━━━━━━━━━━━━━━━━━━━━</b>\n"
-            "<b>⚠️ Razorpay bulk check is currently under maintenance.</b>\n\n"
-            "<b>📌 If you have any Razorpay sites, please contact admin:</b>\n"
-            "<b>👤 <a href='tg://user?id=5237309941'>@Aloee_op</a></b>\n\n"
-            "<b>━━━━━━━━━━━━━━━━━━━━</b>\n"
-            "<b>🦄 Bot By: ℒℯℴ ♔</b>"
-        ), parse_mode='html')
-        return
 
     try:
         sender = await event.get_sender()
@@ -1580,9 +1443,6 @@ async def razorpay_bulk_check(event):
         await status_msg.edit(premium_emoji("No valid cards found."))
         return
 
-    if len(cards) > 1000:
-        cards = cards[:1000]
-
     total_cards = len(cards)
     await status_msg.edit(premium_emoji(f"Starting Razorpay check for {total_cards} cards..."))
 
@@ -1610,6 +1470,9 @@ async def razorpay_bulk_check(event):
 
             if res['status'] == 'Charged':
                 all_results['charged'].append(res)
+                await send_realtime_hit_dm(user_id, res, 'Charged', username)
+            elif res['status'] == 'Approved':
+                all_results['approved'].append(res)
                 await send_realtime_hit_dm(user_id, res, 'Approved', username)
             else:
                 all_results['dead'].append(res)
@@ -1637,7 +1500,6 @@ async def razorpay_bulk_check(event):
         await send_final_results(event.chat_id, all_results)
 
 async def send_final_results(chat_id, results):
-    """Send final results with txt file + Error cards separate"""
     if not results or not isinstance(results, dict):
         results = {'charged': [], 'approved': [], 'dead': [], 'error_cards': [], 'errors': 0, 'total': 0, 'start_time': time.time()}
 
@@ -1684,9 +1546,7 @@ async def send_final_results(chat_id, results):
 <b>━━━━━━━━━━━━━━━━━</b>
 <b>🎯💠 𝐇𝐢𝐭𝐬</b>
 <blockquote>{hits_text}</blockquote>
-<b>━━━━━━━━━━━━━━━━━</b>
-
-🦄 <b>Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+<b>━━━━━━━━━━━━━━━━━</b>"""
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"Checker_Result_{chat_id}_{timestamp}.txt"
@@ -1721,7 +1581,6 @@ async def send_final_results(chat_id, results):
             for r in error_cards:
                 await f.write(f"{r.get('card', '')} | {r.get('gateway', '')} | {r.get('price', '-')} | {str(r.get('message', ''))[:100]} | {r.get('site', '')}\n")
 
-    error_cards = results.get('error_cards', [])
     error_file = None
     if error_cards:
         error_file = f"Error_Cards_{chat_id}_{timestamp}.txt"
@@ -1759,80 +1618,7 @@ async def send_final_results(chat_id, results):
         except:
             pass
 
-@bot.on(events.NewMessage(pattern='/plan'))
-async def plan_cmd(event):
-    user_id = event.sender_id
-    try:
-        sender = await event.get_sender()
-        username = sender.username if sender.username else "No Username"
-        first_name = sender.first_name if sender.first_name else "Unknown"
-    except:
-        username = "Unknown"
-        first_name = "Unknown User"
-
-    is_prem = is_premium(user_id)
-    is_adm = is_admin(user_id)
-
-    if is_adm:
-        premium_status = "👑 ADMIN - FULL UNLIMITED ACCESS"
-        expiry = "∞ Lifetime Admin"
-        status_emoji = "👑"
-        daily_used = "∞"
-        daily_limit = "∞"
-    elif is_prem:
-        premium_status = "💎 PREMIUM USER"
-        expiry = "Premium Active"
-        status_emoji = "💎"
-        daily_used = "∞"
-        daily_limit = "∞"
-        try:
-            with open(PREMIUM_FILE, "r", encoding='utf-8') as f:
-                for line in f:
-                    if str(user_id) in line:
-                        _, exp = line.strip().split("|")
-                        expiry = exp.strip()
-                        break
-        except:
-            pass
-    else:
-        premium_status = "✅ FREE USER"
-        expiry = "N/A"
-        status_emoji = "✅"
-        usage = get_daily_usage(user_id)
-        used = usage["cc_count"]
-        daily_used = f"{used}"
-        daily_limit = "150"
-
-    msg = f"""⚡💳 <b>AUTO SHOPIFY CHECKER</b> 💳⚡
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-{status_emoji} <b>USER PROFILE</b>
-🆔 <b>ID:</b> <code>{user_id}</code>
-👤 <b>Name:</b> {first_name}
-🔖 <b>Username:</b> @{username}
-
-💎 <b>PREMIUM STATUS</b>
-{premium_status}
-⏳ <b>Expiry:</b> <code>{expiry}</code>
-
-📊 <b>TODAY'S USAGE</b>
-🔥 <b>Used:</b> <code>{daily_used}</code> / <code>{daily_limit}</code> CC
-• Single Check (/cc) → {daily_limit} limit
-• Bulk Check (/chk) → Free: 3000 | Premium: ∞
-
-🔑 <b>REDEEM KEY</b>
-Use <code>/redeem KEY_HERE</code> for instant activation
-
-🔄 <b>GET PREMIUM</b>
-Contact <a href="tg://user?id=5237309941">@leo4youh</a> for keys
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-🦄 <b>Powered By ℒℯℴ ♔</b>"""
-
-    await event.reply(premium_emoji(msg), parse_mode='html')
-
 async def test_site(site, proxy):
-    """Test a single site"""
     test_card = "5154623245618097|03|2032|156"
     try:
         if not site.startswith("http"):
@@ -1860,38 +1646,18 @@ async def start(event):
     except:
         first_name = "Unknown"
 
-    if is_admin(user_id):
-        plan = "👑 Admin"
-        joined = "∞ Lifetime"
-        plan_emoji = "👑"
-    elif is_premium(user_id):
-        plan = "💎 Premium"
-        joined = "Active"
-        plan_emoji = "💎"
-    else:
-        plan = "⭐ Free"
-        joined = "Trial"
-        plan_emoji = "⭐"
-
-    welcome_msg = f"""<b>⚡ WELCOME BACK BABY ⚡</b>
+    welcome_msg = f"""<b>⚡ UNLIMITED CHECKER & GENERATOR ⚡</b>
 ━━━━━━━━━━━━━━━━━━━━
 <b>👑 User: <a href="tg://user?id={user_id}">{first_name}</a></b>
 <b>✅ User ID: <code>{user_id}</code></b>
-<b>{plan_emoji} Access: {plan}</b>
-<b>✅ Joined: {joined}</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Dev: <a href="tg://user?id=5237309941"> ℒℯℴ ♔</a></b>
+<b>♾️ Access: Unlimited (No Subscription Required)</b>
 ━━━━━━━━━━━━━━━━━━━━
 <b>👇 Select an option below:</b>"""
 
     main_buttons = [
         [
             Button.inline("  𝘾𝙃𝙀𝘾𝙆𝙀𝙍 🔍  ", b"checker"),
-            Button.inline("  𝘽𝙐𝙔 𝙉𝙊𝙒 🦄 ", b"buy"),
-        ],
-        [
             Button.inline("  𝙏𝙊𝙊𝙇𝙎 🛠️  ", b"tools_menu"),
-            Button.inline("  𝙎𝙐𝙋𝙋𝙊𝙍𝙏 🆘  ", b"support_menu"),
         ],
     ]
 
@@ -1902,58 +1668,6 @@ async def start(event):
         buttons=main_buttons,
         parse_mode="html",
         force_document=False
-    )
-
-# ==================== SUPPORT MENU ====================
-@bot.on(events.CallbackQuery(data=b"support_menu"))
-async def support_menu(event):
-    user_id = event.sender_id
-    try:
-        sender = await event.get_sender()
-        first_name = sender.first_name or "Unknown"
-    except:
-        first_name = "Unknown"
-
-    if is_admin(user_id):
-        plan = "👑 Admin"
-    elif is_premium(user_id):
-        plan = "💎 Premium"
-    else:
-        plan = "⭐ Free"
-
-    support_msg = f"""<b>🆘 SUPPORT MENU 🆘</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>👤 User: <a href="tg://user?id={user_id}">{first_name}</a></b>
-<b>🆔 ID: <code>{user_id}</code></b>
-<b>💠 Plan: {plan}</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>💎 Premium Plans:</b>
-<b>📅 7 Days - $2</b>
-<b>📅 1 Month - $5</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>🔑 Redeem Key:</b>
-<code>/redeem KEY_HERE</code>
-━━━━━━━━━━━━━━━━━━━━
-<b>📞 Contact Owner:</b>
-<b>👑 <a href="tg://user?id=5237309941">@leo4youh</a></b>
-━━━━━━━━━━━━━━━━━━━━
-<b>💳 Payment:</b>
-<b>• UPI • PayPal • Crypto</b>"""
-
-    support_buttons = [
-        [
-            Button.url("𝘽𝙐𝙔 𝙋𝙇𝘼𝙉", "https://t.me/leo4youh"),
-            Button.url("𝘾𝙊𝙉𝙏𝘼𝘾𝙏 𝙊𝙒𝙉𝙀𝙍", "https://t.me/leo4youh"),
-        ],
-        [
-            Button.inline("🔙 𝘽𝘼𝘾𝙆", b"back_to_start"),
-        ],
-    ]
-
-    await event.edit(
-        premium_emoji(support_msg),
-        buttons=support_buttons,
-        parse_mode="html"
     )
 
 # ==================== CHECKER MENU ====================
@@ -1973,16 +1687,11 @@ async def checker_menu(event):
     ]
 
     await event.edit(
-        premium_emoji("<b>🔒 𝘾𝙃𝙀𝘾𝙆𝙀𝙍 𝙈𝙀𝙉𝙐 🔒</b>\n\n"
-        "<b>👇 Select Check Mode:</b>\n\n"
-        "<i>💔 Dil to aaj bhi usi ka hai,</i>\n"
-        "<i>🥀 Bas haq kisi aur ka ho gaya...</i>\n\n"
-        "<b>💳 Card Check Mode:</b>"),
+        premium_emoji("<b>🔒 𝘾𝙃𝙀𝘾𝙆𝙀𝙍 𝙈𝙀𝙉𝙐 🔒</b>\n\n<b>👇 Select Check Mode:</b>"),
         buttons=checker_buttons,
         parse_mode="html"
     )
 
-# ==================== AUTH ====================
 @bot.on(events.CallbackQuery(data=b"auth"))
 async def auth_handler(event):
     await event.answer("⚡ Auth Mode Activated!", alert=True)
@@ -2002,7 +1711,6 @@ async def auth_handler(event):
 
     await event.edit(premium_emoji(auth_msg), buttons=[[Button.inline("🔙 𝘽𝘼𝘾𝙆", b"checker")]], parse_mode="html")
 
-# ==================== CHARGE ====================
 @bot.on(events.CallbackQuery(data=b"charge"))
 async def charge_handler(event):
     await event.answer("⚡ Charge Mode Activated!", alert=True)
@@ -2022,7 +1730,6 @@ async def charge_handler(event):
 
     await event.edit(premium_emoji(charge_msg), buttons=[[Button.inline("🔙 𝘽𝘼𝘾𝙆", b"checker")]], parse_mode="html")
 
-# ==================== MASS ====================
 @bot.on(events.CallbackQuery(data=b"mass"))
 async def mass_handler(event):
     await event.answer("📋 Mass Check Info!", alert=True)
@@ -2034,34 +1741,10 @@ async def mass_handler(event):
 <b>💎 Razorpay Bulk:</b>
 <code>/rzchk</code> <b>(Reply to .txt file)</b>
 ━━━━━━━━━━━━━━━━━━━━
-<b>⚠️ Free: 2000 CC | 👑 Premium: Unlimited</b>"""
+<b>♾️ Access: Unlimited</b>"""
 
     await event.edit(premium_emoji(mass_msg), buttons=[[Button.inline("🔙 𝘽𝘼𝘾𝙆", b"checker")]], parse_mode="html")
 
-# ==================== BUY ====================
-@bot.on(events.CallbackQuery(data=b"buy"))
-async def buy_handler(event):
-    await event.answer("💎 Premium Plans!", alert=True)
-    plan_msg = """<b>💎 PREMIUM PLANS 💎</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>📅 7 Days - $2</b>
-<b>📅 1 Month - $5</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>✅ Features:</b>
-<b>🔥 Unlimited Checks</b>
-<b>💎 Razorpay + Shopify</b>
-<b>⚡ No Daily Limit</b>
-<b>👑 Priority Support</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Contact: <a href="tg://user?id=5237309941">@leo4youh</a></b>"""
-
-    plan_buttons = [
-        [Button.url("💎 BUY NOW", "https://t.me/leo4youh")],
-        [Button.inline("🔙 𝘽𝘼𝘾𝙆", b"back_to_start")],
-    ]
-    await event.edit(premium_emoji(plan_msg), buttons=plan_buttons, parse_mode="html")
-
-# ==================== BACK TO START ====================
 @bot.on(events.CallbackQuery(data=b"back_to_start"))
 async def back_to_start(event):
     user_id = event.sender_id
@@ -2071,38 +1754,18 @@ async def back_to_start(event):
     except:
         first_name = "Unknown"
 
-    if is_admin(user_id):
-        plan = "👑 Admin"
-        joined = "∞ Lifetime"
-        plan_emoji = "👑"
-    elif is_premium(user_id):
-        plan = "💎 Premium"
-        joined = "Active"
-        plan_emoji = "💎"
-    else:
-        plan = "⭐ Free"
-        joined = "Trial"
-        plan_emoji = "⭐"
-
-    welcome_msg = f"""<b>⚡ WELCOME BACK BABY ⚡</b>
+    welcome_msg = f"""<b>⚡ UNLIMITED CHECKER & GENERATOR ⚡</b>
 ━━━━━━━━━━━━━━━━━━━━
 <b>👑 User: <a href="tg://user?id={user_id}">{first_name}</a></b>
 <b>✅ User ID: <code>{user_id}</code></b>
-<b>{plan_emoji} Access: {plan}</b>
-<b>✅ Joined: {joined}</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Dev: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>
+<b>♾️ Access: Unlimited (No Subscription Required)</b>
 ━━━━━━━━━━━━━━━━━━━━
 <b>👇 Select an option below:</b>"""
 
     main_buttons = [
         [
-            Button.inline("𝘾𝙃𝙀𝘾𝙆𝙀𝙍", b"checker"),
-            Button.inline("𝘽𝙐𝙔 𝙉𝙊𝙒", b"buy"),
-        ],
-        [
-            Button.inline("𝙏𝙊𝙊𝙇𝙎 🔧", b"tools_menu"),
-            Button.inline("𝙎𝙐𝙋𝙋𝙊𝙍𝙏 🆘", b"support_menu"),
+            Button.inline("  𝘾𝙃𝙀𝘾𝙆𝙀𝙍 🔍  ", b"checker"),
+            Button.inline("  𝙏𝙊𝙊𝙇𝙎 🛠️  ", b"tools_menu"),
         ],
     ]
 
@@ -2116,13 +1779,9 @@ async def back_to_start(event):
 @bot.on(events.CallbackQuery(data=b"tools_menu"))
 async def tools_menu(event):
     await event.answer("🔧 Tools Opened!", alert=False)
-    tools_msg = """<b>𝙒𝙀𝙇𝘾𝙊𝙈𝙀 𝙎𝙝𝙤𝙥𝙞𝙞 𝙓 𝙍𝙯𝙧 𝘾𝙃𝙀𝘾𝙆𝙀𝙍</b> 
+    tools_msg = """<b>🛠️ UNLIMITED TOOLS MENU 🛠️</b>
 ━━━━━━━━━━━━━━━━━━━━
-<b>😆 Sara Raat soya ni subhan muze Sone de
-💀 Tere May ko chodo... lol 😆</b>
-
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Owner: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+<b>Select a tool category below:</b>"""
 
     tools_buttons = [
         [
@@ -2131,10 +1790,7 @@ async def tools_menu(event):
         ],
         [
             Button.inline("𝙋𝙍𝙊𝙓𝙔", b"proxy_tools"),
-            Button.inline("𝘾𝘾 𝙈𝙀𝙉𝙐", b"cc_tools"),
-        ],
-        [
-            Button.inline("𝙋𝙇𝘼𝙉", b"premium_tools"),
+            Button.inline("𝘾𝘾 𝙂𝙀𝙉 & 𝙏𝙊𝙊𝙇𝙎", b"cc_tools"),
         ],
         [
             Button.inline("🔙 𝘽𝘼𝘾𝙆", b"back_to_start"),
@@ -2162,9 +1818,7 @@ async def shopify_tools_menu(event):
 ➜ Only working sites added
 
 <code>/rmsites url</code>
-➜ Remove specific Shopify site
-━━━━━━━━━━━━━━━━━━━━
-<b>💡 Shopify Gateway ke liye sites!</b>"""
+➜ Remove specific Shopify site"""
 
     await event.edit(
         premium_emoji(shopify_msg),
@@ -2175,7 +1829,7 @@ async def shopify_tools_menu(event):
 @bot.on(events.CallbackQuery(data=b"rz_tools"))
 async def rz_tools_menu(event):
     await event.answer("💎 Razorpay Tools!", alert=False)
-    rz_msg = """<b>💎 Razapay sites </b>
+    rz_msg = """<b>💎 Razorpay Sites</b>
 ━━━━━━━━━━━━━━━━━━━━
 <code>/rzsites</code>
 ➜ Check all RZ sites with Razorpay API
@@ -2187,9 +1841,7 @@ async def rz_tools_menu(event):
 ➜ Only working sites added
 
 <code>/rmrzsites url</code>
-➜ Remove specific Razorpay site
-━━━━━━━━━━━━━━━━━━━━
-<b>💡 Razorpay Gateway ke liye sites!</b>"""
+➜ Remove specific Razorpay site"""
 
     await event.edit(
         premium_emoji(rz_msg),
@@ -2200,7 +1852,7 @@ async def rz_tools_menu(event):
 @bot.on(events.CallbackQuery(data=b"proxy_tools"))
 async def proxy_tools_menu(event):
     await event.answer("📡 Proxy Tools!", alert=False)
-    proxy_msg = """<b>📡 Proxy</b>
+    proxy_msg = """<b>📡 Proxy Tools</b>
 ━━━━━━━━━━━━━━━━━━━━
 <code>/proxy</code>
 ➜ Check all proxies from proxy.txt
@@ -2210,19 +1862,15 @@ async def proxy_tools_menu(event):
 <code>/addproxy</code>
 ➜ Add new proxies (Test first)
 ➜ Supports: ip:port, socks5, http
-➜ Only working proxies added
 
 <code>/getproxy</code>
 ➜ View all saved proxies
-➜ Get TXT file if > 50 proxies
 
 <code>/rmproxy ip:port</code>
 ➜ Remove specific proxy
 
 <code>/clearproxy</code>
-➜ Clear all + Auto backup TXT
-━━━━━━━━━━━━━━━━━━━━
-<b>💡 Dead proxies auto-removed!</b>"""
+➜ Clear all + Auto backup TXT"""
 
     await event.edit(
         premium_emoji(proxy_msg),
@@ -2233,20 +1881,16 @@ async def proxy_tools_menu(event):
 @bot.on(events.CallbackQuery(data=b"cc_tools"))
 async def cc_tools_menu(event):
     await event.answer("💳 CC Tools!", alert=False)
-    cc_msg = """<b>💳 CC TOOLS</b>
+    cc_msg = """<b>💳 UNLIMITED CC GENERATOR & TOOLS</b>
 ━━━━━━━━━━━━━━━━━━━━
-<code>/gen BIN COUNT</code>
-➜ Generate CC from BIN
-➜ Format: /gen 601100 10000
-➜ Max: 100,000 cards
+<code>/gen BIN [BIN2 ...] [COUNT]</code>
+➜ Generate unlimited CC from single or multiple BINs
+➜ Example: <code>/gen 601100 50000</code>
 
 <code>/scrape</code>
 ➜ Reply to .txt CC file
-➜ Removes duplicates
-➜ Removes expired cards
-➜ Get clean TXT file
-━━━━━━━━━━━━━━━━━━━━
-<b>💡 Generated CC for testing only!</b>"""
+➜ Removes duplicates & expired cards
+➜ Get clean TXT file"""
 
     await event.edit(
         premium_emoji(cc_msg),
@@ -2254,212 +1898,7 @@ async def cc_tools_menu(event):
         parse_mode="html"
     )
 
-@bot.on(events.CallbackQuery(data=b"premium_tools"))
-async def premium_tools_menu(event):
-    await event.answer("🔑 Premium Tools!", alert=False)
-    premium_msg = """<b>🔑 Plan info</b>
-━━━━━━━━━━━━━━━━━━━━
-<code>/redeem KEY</code>
-➜ Activate premium access
-➜ Get key from @leo4youh
-
-<code>/plan</code>
-➜ Check your current plan
-➜ View expiry & usage
-
-<b>💎 PREMIUM BENEFITS:</b>
-✅ Unlimited CC Checks
-✅ Razorpay + Shopify
-✅ No Daily Limit (Free: 150)
-✅ Priority Support
-✅ Bulk up to 100k CC
-━━━━━━━━━━━━━━━━━━━━
-<b>📅 Plans: 7 Days $2 | 30 Days $5</b>
-<b>👑 Buy: <a href="tg://user?id=5237309941">@leo4youh</a></b>"""
-
-    premium_buttons = [
-        [
-            Button.url("𝘽𝙐𝙔 𝙋𝙇𝘼𝙉", "https://t.me/leo4youh"),
-            Button.inline("📊 MY PLAN", b"my_plan"),
-        ],
-        [
-            Button.inline("🔙 𝘽𝘼𝘾𝙆", b"tools_menu"),
-        ],
-    ]
-
-    await event.edit(
-        premium_emoji(premium_msg),
-        buttons=premium_buttons,
-        parse_mode="html"
-    )
-
-@bot.on(events.CallbackQuery(data=b"my_plan"))
-async def my_plan_handler(event):
-    user_id = event.sender_id
-    try:
-        sender = await event.get_sender()
-        first_name = sender.first_name or "Unknown"
-    except:
-        first_name = "Unknown"
-
-    if is_admin(user_id):
-        plan_status = "👑 ADMIN - UNLIMITED"
-        expiry = "∞ Lifetime"
-        emoji = "👑"
-        daily = "∞"
-    elif is_premium(user_id):
-        plan_status = "💎 PREMIUM ACTIVE"
-        emoji = "💎"
-        daily = "∞"
-        try:
-            with open(PREMIUM_FILE, "r") as f:
-                for line in f:
-                    if str(user_id) in line:
-                        _, exp = line.strip().split("|")
-                        expiry = exp
-                        break
-        except:
-            expiry = "Active"
-    else:
-        plan_status = "⭐ FREE USER"
-        expiry = "N/A"
-        emoji = "⭐"
-        usage = get_daily_usage(user_id)
-        daily = f"{usage['cc_count']}/150"
-
-    plan_msg = f"""<b>{emoji} MY PLAN DETAILS {emoji}</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>💎 User: {first_name}</b>
-<b>👑 ID: <code>{user_id}</code></b>
-<b>💠 Status: {plan_status}</b>
-<b>⏳ Expiry: {expiry}</b>
-<b>📊 Daily Used: {daily}</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>💎 Upgrade: <a href="tg://user?id=5237309941">@leo4youh</a></b>
-<b>🔑 Redeem: /redeem KEY_HERE</b>"""
-
-    await event.edit(
-        premium_emoji(plan_msg),
-        buttons=[[Button.inline("🔙 𝘽𝘼𝘾𝙆", b"premium_tools")]],
-        parse_mode="html"
-    )
-
-@bot.on(events.NewMessage(pattern=r'^/key\s+(\d+)\s+(\d+)$'))
-async def generate_key_cmd(event):
-    if event.sender_id not in KEY_ADMINS:
-        await event.reply(premium_emoji("❌ <b>Only admins can use this command, motherfucker.</b>"), parse_mode="html")
-        return
-
-    try:
-        count = int(event.pattern_match.group(1))
-        days = int(event.pattern_match.group(2))
-        if count < 1 or days < 1:
-            raise ValueError
-    except:
-        await event.reply(premium_emoji("❌ <b>Usage:</b> <code>/key 10 30</code> (count days)"), parse_mode="html")
-        return
-
-    keys = [generate_key(days) for _ in range(count)]
-    keys_text = "\n".join([f"<code>{k}</code>" for k in keys])
-
-    msg = f"""✅ <b>{count} KEYS GENERATED ({days} DAYS) 🔥</b>
-━━━━━━━━━━━━━━━━━
-{keys_text}
-━━━━━━━━━━━━━━━━━
-<b>Copy one by one or all at once. Redeem with /redeem KEY_HERE</b>"""
-
-    await event.reply(premium_emoji(msg), parse_mode="html")
-
-@bot.on(events.NewMessage(pattern=r'^/redeem\s+(.+)'))
-async def redeem_cmd(event):
-    user_id = event.sender_id
-    key_input = event.pattern_match.group(1).strip().upper()
-
-    if not key_input:
-        await event.reply(premium_emoji("""<b>❌ INVALID FORMAT</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>🔑 Usage:</b> <code>/redeem KEY_HERE</code>
-
-<b>💡 Example:</b>
-<code>/redeem ℒℯℴ×Aᴅᴍɪɴs-123456-30D</code>
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Get Key: <a href="tg://user?id=5237309941">@leo4youh</a></b>"""), parse_mode="html")
-        return
-
-    keys_list = [k.strip() for k in re.split(r'[\s\n]+', key_input) if k.strip()]
-    if len(keys_list) > 1:
-        await event.reply(premium_emoji("""<b>❌ MULTIPLE KEYS DETECTED</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>⚠️ Ek time pe sirf ek key redeem kar sakte ho!</b>
-
-<b>💡 Ek key daalo:</b>
-<code>/redeem KEY_HERE</code>"""), parse_mode="html")
-        return
-
-    key = keys_list[0]
-    processing_msg = await event.reply(premium_emoji("<b>🔄 Processing Key...</b>\n\n<b>🔑 Verifying your key...</b>"), parse_mode="html")
-    await asyncio.sleep(1)
-
-    result = redeem_key(key, user_id)
-
-    if result == "success":
-        try:
-            await processing_msg.delete()
-        except:
-            pass
-
-        expiry = "Active"
-        try:
-            with open(PREMIUM_FILE, "r") as f:
-                for line in f:
-                    if str(user_id) in line:
-                        _, exp = line.strip().split("|")
-                        expiry = exp
-                        break
-        except:
-            pass
-
-        await event.reply(premium_emoji(f"""<b>🎉 PREMIUM ACTIVATED SUCCESSFULLY! 🎉</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>💎 STATUS: PREMIUM ACTIVE</b>
-<b>👤 USER ID: <code>{user_id}</code></b>
-<b>⏳ EXPIRY: {expiry}</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>🔥 YOUR BENEFITS:</b>
-✅ Unlimited CC Checks
-✅ Razorpay + Shopify Access
-✅ No Daily Limit (Free: 150)
-✅ Bulk Check up to 100k CC
-✅ Priority Support
-━━━━━━━━━━━━━━━━━━━━
-<b>📋 COMMANDS:</b>
-<code>/cc card|mm|yy|cvv</code> ➜ Single Check
-<code>/chk</code> ➜ Bulk Check (Reply .txt)
-<code>/rz card|mm|yy|cvv</code> ➜ Razorpay Auth
-<code>/rzchk</code> ➜ Razorpay Bulk
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>
-<b>🔑 Redeemed Key: <code>{key[:12]}...</code></b>"""), parse_mode="html")
-    else:
-        try:
-            await processing_msg.delete()
-        except:
-            pass
-
-        await event.reply(premium_emoji(f"""<b>❌ INVALID KEY!</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>🔑 Yeh key valid nahi hai ya expire ho gayi!</b>
-
-<b>💡 Check karo:</b>
-✅ Key sahi type ki hai?
-✅ Key pehle use to nahi hui?
-✅ Key expire to nahi hui?
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 Fresh Key: <a href="tg://user?id=5237309941">@leo4youh</a></b>
-<b>📅 Plans: $2/week | $5/month</b>"""), parse_mode="html")
-
 def get_indian_time():
-    """Real Indian Standard Time (IST) — UTC+5:30"""
     ist = pytz.timezone('Asia/Kolkata')
     now = datetime.now(ist)
     return now.strftime("%I:%M:%S %p IST")
@@ -2478,11 +1917,6 @@ async def copy_cc_handler(event):
 async def single_cc_check(event):
     user_id = event.sender_id
     save_user(user_id)
-
-    allowed, remaining = check_limits(user_id, False)
-    if not allowed:
-        await event.reply(premium_emoji("❌ Daily limit khatam. Premium le lo."))
-        return
 
     if len(event.message.text.strip()) <= 4:
         await event.reply("Usage: `/cc 5209430225796165|01|27|458`")
@@ -2535,7 +1969,6 @@ async def single_cc_check(event):
 
     try:
         result = await check_card_with_retry(card, sites, proxies, max_retries=8)
-        update_daily_usage(user_id, 1)
 
         brand, bin_type, level, bank, country, flag = await get_bin_info(card.split('|')[0])
         gateway = result.get("gateway", "𝘼𝙪𝙩𝙤 𝙎𝙝𝙤𝙥𝙞𝙛𝙮")
@@ -2579,9 +2012,7 @@ async def single_cc_check(event):
 🏧 𝐁𝐚𝐧𝐤 ➜ {bank}
 ☄️ 𝐂𝐨𝐮𝐧𝐭𝐫𝐲 ➜ {country} {flag}
 ⏳ 𝐓𝐢𝐦𝐞 ➜ {current_time}
-👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{first_name}</a>
-
-🦄 Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a>"""
+👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{first_name}</a>"""
 
         cc_copy = result['card']
         buttons = [
@@ -2596,7 +2027,6 @@ async def single_cc_check(event):
         await send_to_chat(event.chat_id, premium_emoji(final_resp), buttons=buttons, parse_mode="html")
 
         if result['status'] in ['Charged', 'Approved']:
-            await send_realtime_hit_group(user_id, result, result['status'], first_name)
             await send_realtime_hit_dm(user_id, result, result['status'], first_name)
     except Exception as e:
         try:
@@ -2606,11 +2036,6 @@ async def single_cc_check(event):
 
 @bot.on(events.NewMessage(pattern=r'^/chkproxy\s+'))
 async def check_single_proxy(event):
-    user_id = event.sender_id
-    if not is_premium(user_id) and not is_admin(user_id):
-        await event.reply(premium_emoji("❌ <b>Access Denied</b>\n\nOnly premium users can use this command."), parse_mode='html')
-        return
-
     proxy = event.message.text.split(' ', 1)[1].strip()
     if not proxy:
         await event.reply(premium_emoji("❌ Usage: <code>/chkproxy ip:port:user:pass</code>"), parse_mode='html')
@@ -2659,16 +2084,10 @@ async def clear_all_proxies(event):
 📦 Backup: Sent above
 📊 proxy.txt: Empty now
 
-💡 Use /addproxy to add new proxies.
-💡 Terminal se manually add kar sakte ho - woh safe rahenge!""")
+💡 Use /addproxy to add new proxies.""")
 
 @bot.on(events.NewMessage(pattern=r'^/rmproxyindex\s+'))
 async def remove_proxy_by_index(event):
-    user_id = event.sender_id
-    if not is_premium(user_id) and not is_admin(user_id):
-        await event.reply(premium_emoji("❌ <b>Access Denied</b>\n\nOnly premium users can use this command."), parse_mode='html')
-        return
-
     indices_str = event.message.text.split(' ', 1)[1].strip()
     if not indices_str:
         await event.reply(premium_emoji("❌ Usage: <code>/rmproxyindex 1,2,3</code>"), parse_mode='html')
@@ -2727,47 +2146,39 @@ async def remove_site_command(event):
             for site in new_sites:
                 await f.write(f"{site}\n")
 
-        await event.reply(premium_emoji(f" **Site Removed Successfully!**\n\n`{url_to_remove}` has been deleted from `sites.txt`.\n\n_Active checks will stop using this site in the next batch._"))
+        await event.reply(premium_emoji(f" **Site Removed Successfully!**\n\n`{url_to_remove}` has been deleted from `sites.txt`."))
     except Exception as e:
         await event.reply(premium_emoji(f" Error removing site: {e}"))
 
+# ==================== UNLIMITED CC GENERATOR ====================
 @bot.on(events.NewMessage(pattern=r'^/gen\s+(.+)'))
 async def gen_cc_command(event):
     user_id = event.sender_id
-    if not is_premium(user_id) and not is_admin(user_id):
-        await event.reply("❌ Premium / Admin only.")
-        return
+    start_ts = time.time()
 
     try:
         sender = await event.get_sender()
-        username = sender.username or f"user_{user_id}"
+        username = sender.username or sender.first_name or f"user_{user_id}"
     except:
         username = f"user_{user_id}"
 
-    if is_admin(user_id):
-        plan = "👑 ADMIN"
-    elif is_premium(user_id):
-        plan = "💎 PREMIUM"
-    else:
-        plan = "🆓 FREE"
-
     args = event.pattern_match.group(1).strip().split()
     if not args:
-        await event.reply("Usage: /gen 601100 534109 477351 542124 40000")
+        await event.reply("Usage: /gen 601100 534109 50000")
         return
 
     bins = []
-    total_cards = 10000
+    total_cards = 50000
 
     for arg in args:
         if arg.isdigit():
             if len(arg) <= 6:
                 bins.append(arg)
             else:
-                total_cards = int(arg)
+                total_cards = max(1, int(arg))
 
     if not bins:
-        await event.reply("❌ BIN daal bkl.\nExample: /gen 601100 534109 40000")
+        await event.reply("❌ Valid BIN ivvandi.\nExample: /gen 601100 534109 50000")
         return
 
     per_bin = max(1, total_cards // len(bins))
@@ -2783,6 +2194,7 @@ async def gen_cc_command(event):
     else:
         brand = bin_type = bank = country = flag = '-'
 
+    elapsed = round(time.time() - start_ts, 2)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"Generated_CC_{user_id}_{timestamp}.txt"
 
@@ -2790,19 +2202,17 @@ async def gen_cc_command(event):
         for card in all_cards:
             await f.write(f"{card}\n")
 
-    summary = f"""CC Generated Successfully
-BINs: {', '.join(bins)}
-Total Cards: {len(all_cards)}
-Amount: ${random.randint(12,25)}
+    summary = f"""✅ <b>Unlimited CC Generated</b>
+━━━━━━━━━━━━━━━━━━━━
+🔢 <b>BINs:</b> <code>{', '.join(bins)}</code>
+💳 <b>Total Cards:</b> <code>{len(all_cards)}</code>
+🏷️ <b>Brand:</b> {brand} - {bin_type}
+🏦 <b>Bank:</b> {bank}
+🌍 <b>Country:</b> {country} {flag}
+⏱️ <b>Time:</b> {elapsed}s
+👤 <b>By:</b> <a href="tg://user?id={user_id}">{username}</a> [♾️ Unlimited]"""
 
-Brand: {brand} - {bin_type}
-Bank: {bank}
-Country: {country} {flag}
-
-Time: 0.92 seconds
-Checked By: <a href="tg://user?id={user_id}">{username}</a> [{plan}]"""
-
-    await event.reply(summary, file=filename, parse_mode="html")
+    await event.reply(premium_emoji(summary), file=filename, parse_mode="html")
     try:
         os.remove(filename)
     except:
@@ -2811,9 +2221,6 @@ Checked By: <a href="tg://user?id={user_id}">{username}</a> [{plan}]"""
 @bot.on(events.NewMessage(pattern=r'^/scrape'))
 async def pure_scrape(event):
     user_id = event.sender_id
-    if not is_premium(user_id) and not is_admin(user_id):
-        await event.reply(premium_emoji("❌ Premium / Admin only."))
-        return
 
     if not event.reply_to_msg_id:
         await event.reply(premium_emoji("📄 Reply to CC .txt file with /scrape"))
@@ -2856,9 +2263,7 @@ async def pure_scrape(event):
 🗑 𝗗𝘂𝗽𝗹𝗶𝗰𝗮𝘁𝗲𝘀 : <code>{duplicates_removed}</code>
 ⏰ 𝗘𝘅𝗽𝗶𝗿𝗲𝗱 : <code>{expired}</code>
 ✅ 𝗩𝗮𝗹𝗶𝗱 𝗖𝗖 : <code>{len(valid_cards)}</code>
-</blockquote>
-━━━━━━━━━━━━━━━━━━━━
-<b>👑 𝗕𝘆 ➜ <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+</blockquote>"""
 
         await status.edit(premium_emoji(summary), parse_mode="html")
 
@@ -2879,8 +2284,7 @@ async def pure_scrape(event):
 <blockquote>
 💎 𝗩𝗮𝗹𝗶𝗱 𝗖𝗖 : <code>{len(valid_cards)}</code>
 📁 𝗙𝗶𝗹𝗲 : <code>{clean_file}</code>
-</blockquote>
-🚀 𝗘𝗻𝗷𝗼𝘆 𝗙𝗮𝘀𝘁 𝗦𝗰𝗿𝗮𝗽𝗶𝗻𝗴"""),
+</blockquote>"""),
             file=clean_file,
             parse_mode="html"
         )
@@ -2898,109 +2302,10 @@ async def pure_scrape(event):
             except:
                 pass
 
-FAKE_CARDS_LIST = [
-    "4147202621268158|07|2028|195",
-    "4000223243361896|11|2028|177",
-    "4147202609365927|05|2028|366",
-    "4147202655487278|01|2029|386",
-    "4246315340233095|04|2029|661",
-    "4430440064855505|09|2027|411",
-    "4387870174036161|08|2029|930",
-    "4565982031094038|07|2028|033",
-    "4236985010124865|11|2028|620",
-    "4147400423058310|03|2029|866",
-]
-
-async def auto_fake_hits():
-    """✅ FAKE HITS — SIRF SHOPIFY (DM COPY CC Button = DANGER RED)"""
-    print("🔥 Auto Fake Hits Started — DM Button Danger Style!")
-    first_hit_done = False
-
-    while True:
-        try:
-            if not first_hit_done:
-                delay = 0
-                first_hit_done = True
-                print("⚡ First Hit: Turant bhej raha hu (0 second)!")
-            else:
-                delay = 1800
-                print("⏳ Next Hit: 30 minute baad aayega...")
-
-            await asyncio.sleep(delay)
-
-            random_cc = random.choice(FAKE_CARDS_LIST)
-            cc_parts = random_cc.split('|')
-            cc_num = cc_parts[0]
-            cc_hidden = cc_num[:6] + "******" + cc_num[-4:]
-
-            price = round(random.uniform(1.00, 15.00), 2)
-            currency = "$"
-            gateway = "Shopify"
-
-            brand, bin_type, level, bank, country, flag = await get_bin_info(cc_num)
-
-            status_text = "Charged 💎"
-            status_line = "✅ 𝑯𝑰𝑻 𝑫𝑬𝑻𝑬𝑪𝑻𝑬𝑫 ↬ Charged 💎"
-            response = random.choice(["ORDER_PAID", "ORDER_PLACED", "INSUFFICIENT_FUNDS"])
-
-            group_msg = f"""{status_line}
-
-━━━━━━━━━━━━━━━━━
-💠 𝐆𝐚𝐭𝐞𝐰𝐚𝐲 ↬ {gateway}
-💳 𝐂𝐂 ↬ <code>{cc_hidden}</code>
-💎𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞 ↬ {response}
-💰 𝐏𝐑𝐈𝐂𝐄 ↬ {currency}{price}
-
-👤 𝐔𝐬𝐞𝐫 ↬ <a href="tg://user?id=5237309941">ℒℯℴ ♔</a> [👑 Admin]
-🦄 𝐇𝐢𝐭 𝐅𝐫𝐨𝐦 ↬ @Shopixrzr_bot"""
-
-            group_buttons = [[Button.url("𝙎𝙝𝙤𝙥𝙞𝙞 𝙓 𝙍𝙯𝙧 𝘾𝙃𝙀𝘾𝙆𝙀𝙍", url="https://t.me/Shopixrzr_bot")]]
-
-            dm_msg = f"""{status_line}
-━━━━━━━━━━━━━━━━━
-💠 𝐆𝐚𝐭𝐞𝐰𝐚𝐲 ↬ {gateway}
-✔️ 𝐂𝐂 ↬ <tg-spoiler><code>{random_cc}</code></tg-spoiler>
-⚡️𝐒𝐭𝐚𝐭𝐮𝐬 ↬ {status_text}
-⭐ 𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞 ↬ {response}
-{currency} 𝐀𝐦𝐨𝐮𝐧𝐭 ↬ {currency}{price}
-💳 𝐁𝐢𝐧 ↬ {cc_num[:6]} - {brand}
-🏧 𝐁𝐚𝐧𝐤 ↬ {bank}
-☄️ 𝐂𝐨𝐮𝐧𝐭𝐫𝐲 ↬ {country} {flag}
-
-👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ↬ <a href="tg://user?id=5237309941">ℒℯℴ ♔</a>
-
-🦄 Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a>"""
-
-            dm_buttons = [[Button.inline("𝘾𝙊𝙋𝙔 𝘾𝘾", f"copycc_{random_cc}".encode())]]
-
-            try:
-                await bot.send_message("THENETWORKOFLEO", premium_emoji(group_msg), parse_mode='html', buttons=group_buttons, silent=True)
-                await bot.send_message(5237309941, premium_emoji(dm_msg), parse_mode='html', buttons=dm_buttons)
-                print(f"✅ Fake Shopify Charged | Bank: {bank} | Price: ${price}")
-            except Exception as e:
-                print(f"❌ Fake send error: {e}")
-        except Exception as e:
-            print(f"❌ Fake loop error: {e}")
-            await asyncio.sleep(60)
-
 @bot.on(events.NewMessage(pattern='/chk'))
 async def check_command(event):
     user_id = event.sender_id
     save_user(user_id)
-
-    is_admin_user = is_admin(user_id)
-    is_prem_user = is_premium(user_id)
-
-    if not is_admin_user and not is_prem_user:
-        await event.reply(premium_emoji("""<b>🔒 𝙋𝙍𝙀𝙈𝙄𝙐𝙈 𝙊𝙉𝙇𝙔</b>
-━━━━━━━━━━━━━━━━━━━━
-<b>💎 Bulk Check Premium Users ke liye hai!</b>
-
-<b>📅 Plans:</b> <b>7 Days $2 | 30 Days $5</b>
-<b>👑 DM:</b> <a href="tg://user?id=5237309941">@leo4youh</a>
-━━━━━━━━━━━━━━━━━━━━
-<b>🔑 Redeem:</b> <code>/redeem KEY</code>"""), parse_mode="html")
-        return
 
     try:
         sender = await event.get_sender()
@@ -3051,10 +2356,14 @@ async def check_command(event):
     )
 
     active_sessions[f"chk_{user_id}_{status_msg.id}"] = {
-        'user_id': user_id, 'username': username,
-        'is_admin': is_admin_user, 'is_premium': is_prem_user,
-        'reply_msg': reply_msg, 'status_msg_id': status_msg.id,
-        'user_sites': user_sites, 'global_sites': global_sites, 'proxies': proxies
+        'user_id': user_id,
+        'username': username,
+        'is_admin': is_admin(user_id),
+        'reply_msg': reply_msg,
+        'status_msg_id': status_msg.id,
+        'user_sites': user_sites,
+        'global_sites': global_sites,
+        'proxies': proxies
     }
 
 @bot.on(events.CallbackQuery(pattern=rb"chk_my_(\d+)"))
@@ -3119,7 +2428,6 @@ async def run_chk(data, sites):
     user_id = data['user_id']
     username = data['username']
     is_admin_user = data['is_admin']
-    is_prem_user = data['is_premium']
     reply_msg = data['reply_msg']
     proxies = data['proxies']
 
@@ -3137,13 +2445,6 @@ async def run_chk(data, sites):
         except:
             pass
         return
-
-    if is_admin_user or is_prem_user:
-        if len(cards) > 100000:
-            cards = cards[:100000]
-    else:
-        if len(cards) > 2000:
-            cards = cards[:2000]
 
     try:
         os.remove(file_path)
@@ -3229,6 +2530,9 @@ async def run_chk(data, sites):
 
                 if res['status'] == 'Charged':
                     all_results['charged'].append(res)
+                    asyncio.create_task(send_realtime_hit_dm(user_id, res, 'Charged', username))
+                elif res['status'] == 'Approved':
+                    all_results['approved'].append(res)
                     asyncio.create_task(send_realtime_hit_dm(user_id, res, 'Approved', username))
                 elif any(x in str(res.get('message', '')).lower() for x in ['error', 'invalid json', '429', '403', '503', 'no valid']):
                     all_results['errors'] += 1
@@ -3281,90 +2585,8 @@ async def run_chk(data, sites):
             pass
         await send_final_results(user_id, all_results)
 
-def generate_key(days):
-    key = f"ℒℯℴ×Aᴅᴍɪɴs-{random.randint(100000,999999)}-{days}D"
-    with open(KEYS_FILE, 'a', encoding='utf-8') as f:
-        f.write(f"{key}|{days}\n")
-    return key
-
-async def send_realtime_hit_group(user_id, result, hit_type, username):
-    """Group mein bhejega - CC HIDE, Simple Style - Charged + Approved dono"""
-    try:
-        if result['status'] not in ('Charged', 'Approved'):
-            return
-
-        gateway = result.get('gateway', 'Unknown')
-        price = result.get('price', 'Real')
-
-        if is_admin(user_id):
-            plan = "👑 Admin"
-        elif is_premium(user_id):
-            plan = "💎 Premium"
-        else:
-            plan = "🆓 Free"
-
-        card_full = result.get('card', '')
-        if '|' in card_full:
-            card_num = card_full.split('|')[0]
-            if len(card_num) >= 10:
-                card_hidden = card_num[:6] + "******" + card_num[-4:]
-            else:
-                card_hidden = card_num[:6] + "****"
-        else:
-            card_hidden = "****"
-
-        is_razorpay = "razorpay" in gateway.lower()
-
-        if result['status'] == 'Charged':
-            status_text = "Charged 💎"
-            emoji = "💎"
-        else:
-            status_text = "Approved 🔥"
-            emoji = "🔥"
-
-        if is_razorpay:
-            message = f"""✅ 𝐑𝐀𝐙𝐎𝐑𝐏𝐀𝐘 𝐇𝐈𝐓 ↬ {status_text}
-
-━━━━━━━━━━━━━━━━━
-💠 𝐆𝐚𝐭𝐞𝐰𝐚𝐲 ↬ {gateway}
-💳 𝐂𝐂 ↬ <code>{card_hidden}</code>
-💎 𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞 ↬ {result.get('message','')[:120]}
-💰 𝐏𝐑𝐈𝐂𝐄 ↬ ₹{price}
-
-👤 𝐔𝐬𝐞𝐫 ↬ <a href="tg://user?id={user_id}">{username}</a> [{plan}]
-🦄 𝐇𝐢𝐭 𝐅𝐫𝐨𝐦 ↬ @Shopixrzr_bot"""
-        else:
-            message = f"""✅ 𝑯𝑰𝑻 𝑫𝑬𝑻𝑬𝑪𝑻𝑬𝑫 ↬ {status_text}
-
-━━━━━━━━━━━━━━━━━
-💠 𝐆𝐚𝐭𝐞𝐰𝐚𝐲 ↬ {gateway}
-💳 𝐂𝐂 ↬ <code>{card_hidden}</code>
-💎𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞 ↬ {result.get('message','')[:120]}
-💰 𝐏𝐑𝐈𝐂𝐄 ↬ ${price}
-
-✅ 𝐔𝐬𝐞𝐫 ↬ <a href="tg://user?id={user_id}">{username}</a> [{plan}]
-🦄 𝐇𝐢𝐭 𝐅𝐫𝐨𝐦 ↬ @Shopixrzr_bot"""
-
-        buttons = [
-            [Button.url("𝙎𝙝𝙤𝙥𝙞𝙞 𝙓 𝙍𝙯𝙧 𝘾𝙃𝙀𝘾𝙆𝙀𝙍", url="https://t.me/Shopixrzr_bot")]
-        ]
-
-        try:
-            msg = await bot.send_message("THENETWORKOFLEO", premium_emoji(message), parse_mode='html', buttons=buttons, silent=True)
-            await bot.send_reaction("THENETWORKOFLEO", msg.id, emoji)
-        except:
-            pass
-
-        try:
-            await bot.send_message(ADMIN_ID, premium_emoji(message), parse_mode='html')
-        except:
-            pass
-    except Exception as e:
-        print(f"send_realtime_hit_group error: {e}")
-
 # ==================== NOTICE SYSTEM ====================
 def save_user(user_id):
-    """User ko database mein save karo"""
     try:
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
@@ -3378,7 +2600,6 @@ def save_user(user_id):
 
 @bot.on(events.NewMessage(pattern=r'^/Notice(?:\s|$)(.*)'))
 async def notice_to_all(event):
-    """Admin notice bhejo sabhi users ko"""
     if not is_admin(event.sender_id):
         return
 
@@ -3404,18 +2625,9 @@ async def notice_to_all(event):
         await event.reply("❌ Koi user nahi hai! Pehle users /start karenge.")
         return
 
-    try:
-        me = await bot.get_me()
-        bot_username = me.username
-    except:
-        bot_username = "Shopixrzr_bot"
-
     notice_msg = f"""📢 NOTICE FROM ADMIN
 
-{notice_text}
-
-━━━━━━━━━━━━━━━━━━
-🦄 @{bot_username}"""
+{notice_text}"""
 
     status = await event.reply(f"📤 Notice bhej raha hu {len(users)} users ko...")
 
@@ -3437,7 +2649,6 @@ async def notice_to_all(event):
 👥 Total: {len(users)}""")
 
 def get_all_users():
-    """Sabhi users jo bot ko start kiye"""
     users = set()
     try:
         conn = sqlite3.connect('users.db')
@@ -3462,7 +2673,6 @@ def get_all_users():
     return list(users)
 
 async def send_realtime_hit_dm(user_id, result, hit_type, username):
-    """User DM mein bhejega - CC OPEN, Full Detail + Gateway auto-detect"""
     try:
         if result["status"] not in ("Approved", "Charged"):
             return
@@ -3496,9 +2706,7 @@ async def send_realtime_hit_dm(user_id, result, hit_type, username):
 <b>🏧 𝐁𝐚𝐧𝐤 ➜ {bank}</b>
 <b>☄️ 𝐂𝐨𝐮𝐧𝐭𝐫𝐲 ➜ {country} {flag}</b>
 <b>⏳ 𝐓𝐢𝐦𝐞 ➜ {current_time}</b>
-<b>👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{username}</a></b>
-
-🦄 <b>Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+<b>👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{username}</a></b>"""
         else:
             message = f"""<b>⚡💳 𝘼𝙪𝙩𝙤 𝙎𝙝𝙤𝙥𝙞𝙛𝙮 💳⚡</b>
 ━━━━━━━━━━━━━━━━━━━━
@@ -3511,9 +2719,7 @@ async def send_realtime_hit_dm(user_id, result, hit_type, username):
 <b>🏧 𝐁𝐚𝐧𝐤 ➜ {bank}</b>
 <b>☄️ 𝐂𝐨𝐮𝐧𝐭𝐫𝐲 ➜ {country} {flag}</b>
 <b>⏳ 𝐓𝐢𝐦𝐞 ➜ {current_time}</b>
-<b>👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{username}</a></b>
-
-🦄 <b>Bot By: <a href="tg://user?id=5237309941">ℒℯℴ ♔</a></b>"""
+<b>👑 𝐂𝐡𝐞𝐜𝐤𝐞𝐝 𝐁𝐲 ➜ <a href="tg://user?id={user_id}">{username}</a></b>"""
 
         await bot.send_message(user_id, premium_emoji(message), parse_mode='html')
     except Exception as e:
@@ -3531,39 +2737,6 @@ def generate_cc(bin_prefix, count=10):
         cc = f"{card_num[:16]}|{month:02d}|{year}|{cvv}"
         cards.append(cc)
     return cards
-
-def redeem_key(key, user_id):
-    if not os.path.exists(KEYS_FILE):
-        return "invalid"
-    try:
-        with open(KEYS_FILE, "r", encoding='utf-8') as f:
-            lines = f.readlines()
-        new_lines = []
-        found = False
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                k, d = line.split("|", 1)
-                if k.strip().upper() == key.strip().upper():
-                    found = True
-                    expiry_days = 99999 if is_admin(user_id) else int(d.strip())
-                    expiry = datetime.now() + timedelta(days=expiry_days)
-                    with open(PREMIUM_FILE, "a", encoding='utf-8') as p:
-                        p.write(f"{user_id}|{expiry.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                else:
-                    new_lines.append(line + "\n")
-            except:
-                new_lines.append(line + "\n")
-        if not found:
-            return "invalid"
-        with open(KEYS_FILE, "w", encoding='utf-8') as f:
-            f.writelines(new_lines)
-        return "success"
-    except Exception as e:
-        print(f"Redeem error: {e}")
-        return "invalid"
 
 async def send_filtered_results(user_id, results, filter_type):
     last_button_click = {}
@@ -3642,7 +2815,6 @@ async def send_filtered_results(user_id, results, filter_type):
 💳 𝐁𝐢𝐧 ➜ {bin_num}
 🌐 Gateway ➜ {gateway}
 ━━━━━━━━━━━━━━━━━━━━
-🦄 Bot By: ℒℯℴ ♔
 
 """)
 
@@ -3715,20 +2887,8 @@ async def stop_handler(event):
 
 print("✅ Bot started successfully!")
 
-# === FIXED AUTO FAKE HITS ===
-FAKE_HITS_ENABLED = True
-
-async def start_fake_hits():
-    if not FAKE_HITS_ENABLED:
-        return
-
-    await asyncio.sleep(10)
-    print("🔥 Auto fake hits loop STARTED successfully!")
-    await auto_fake_hits()
-
-# === STABLE MAIN BLOCK ===
 if __name__ == "__main__":
-    print("🔥 GOD MODE BOT ENGAGED — FLOODWATCH ACTIVE 🔥")
+    print("🔥 UNLIMITED BOT ENGAGED 🔥")
 
     retry_count = 0
     max_retries = 9999
@@ -3737,10 +2897,6 @@ if __name__ == "__main__":
         try:
             print(f"🌐 Bot running... (attempt {retry_count + 1})")
             bot.start()
-
-            if FAKE_HITS_ENABLED:
-                bot.loop.create_task(start_fake_hits())
-
             bot.run_until_disconnected()
             break
 
