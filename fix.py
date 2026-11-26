@@ -104,7 +104,10 @@ DAILY_USAGE_FILE = "daily_usage.json"
 RZ_SITES_FILE = 'rz_sites.txt'        # ✅ Razorpay sites file
 PHOTO_URL = "https://i.postimg.cc/NMfk3jpP/Leo4youh.png"  # ← अपना असली Link
 # Initialize bot
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 bot = TelegramClient('checker_bot', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
+
 # RAZORPAY SINGLE SITE (koi sites1.txt nahi)
 RAZORPAY_FIXED_SITE = "https://pages.razorpay.com/BusinessGarh?fbclid=PAAaYBPBDRDVaPZMu7kXaq1a2mNOIiXxEJ1usxIxxdbAJYt3q75QWhHXFZeh8_aem_AXQuIpg6pqBI2mXplIaDgYU0ztY4jF0C97qV1RPZF6WzfWeZy93K9u0Gv1wbTWYDpRs%20Ye%20lagan%20he%20to/pl_Eg24W0HLznkELl/view"  # Tera strong link
 RAZORPAY_API_BASE = "https://auto-razorpay-nano.vercel.app/hit"
